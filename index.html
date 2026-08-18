@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#183b32">
+<title>Bandung Escape</title>
+<style>
+:root {
+  --bg:#f5f1e8; --card:#fffdf8; --ink:#183b32; --muted:#6d756e;
+  --accent:#2f6b57; --line:#ded8ca; --danger:#9b4d45;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.app { width:min(680px,100%); margin:auto; padding:22px 16px 42px; }
+.hero { background:var(--ink); color:#fffdf8; border-radius:24px; padding:25px 22px; box-shadow:0 8px 24px #183b3218; }
+.eyebrow { font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; opacity:.72; }
+h1 { margin:5px 0 4px; font-size:2rem; }
+.subtitle { opacity:.78; margin:0; }
+.progress-wrap { margin-top:22px; }
+.progress-label { display:flex; justify-content:space-between; font-size:.9rem; margin-bottom:8px; }
+.progress { height:9px; background:#ffffff2b; border-radius:99px; overflow:hidden; }
+.progress > div { height:100%; width:0; background:#d8e7d9; border-radius:99px; transition:width .25s; }
+.section { margin-top:22px; }
+.section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+h2 { font-size:1.05rem; margin:0; }
+.count { color:var(--muted); font-size:.85rem; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:17px; padding:14px; margin:9px 0; display:flex; gap:12px; align-items:flex-start; box-shadow:0 3px 12px #183b3208; }
+.check { width:23px; height:23px; accent-color:var(--accent); margin-top:2px; flex:0 0 auto; }
+.place { min-width:0; flex:1; }
+.name { font-weight:700; font-size:1rem; overflow-wrap:anywhere; }
+.visited .name { text-decoration:line-through; color:var(--muted); }
+.actions { display:flex; gap:8px; margin-top:9px; flex-wrap:wrap; }
+.maps { display:inline-flex; align-items:center; text-decoration:none; color:var(--accent); font-size:.84rem; font-weight:650; border:1px solid #bfd0c6; padding:7px 10px; border-radius:10px; }
+.delete { border:0; background:none; color:var(--danger); font-size:.82rem; padding:7px 3px; }
+.add { width:100%; border:0; border-radius:15px; padding:13px 15px; background:var(--accent); color:white; font-weight:750; font-size:.95rem; margin-top:10px; }
+.empty { color:var(--muted); background:#ffffff88; border:1px dashed var(--line); padding:16px; border-radius:15px; text-align:center; }
+dialog { width:min(520px,calc(100% - 28px)); border:0; border-radius:20px; padding:0; background:var(--card); color:var(--ink); box-shadow:0 20px 70px #0004; }
+dialog::backdrop { background:#183b3266; backdrop-filter:blur(2px); }
+.modal { padding:20px; }
+.modal h3 { margin:0 0 15px; }
+label { display:block; font-size:.85rem; font-weight:700; margin:12px 0 6px; }
+input { width:100%; border:1px solid var(--line); border-radius:11px; padding:12px; font:inherit; background:#fff; }
+.modal-actions { display:flex; gap:9px; margin-top:17px; }
+.modal-actions button { flex:1; padding:12px; border-radius:11px; border:1px solid var(--line); font-weight:700; }
+.primary { background:var(--accent); color:#fff; border-color:var(--accent)!important; }
+.small-note { color:var(--muted); font-size:.78rem; line-height:1.45; margin-top:8px; }
+.footer { text-align:center; color:var(--muted); font-size:.76rem; margin-top:24px; }
+@media (max-width:430px) {
+  .app { padding:14px 12px 32px; }
+  .hero { border-radius:20px; padding:22px 18px; }
+  h1 { font-size:1.75rem; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="hero">
+    <div class="eyebrow">2 Days • 1 Night</div>
+    <h1>🌿 Bandung Escape</h1>
+    <p class="subtitle">Places I want to visit, and what I actually visited.</p>
+    <div class="progress-wrap">
+      <div class="progress-label"><span id="progressText">0 / 0 visited</span><strong id="progressPct">0%</strong></div>
+      <div class="progress"><div id="progressBar"></div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>📍 Places I Want to Visit</h2>
+      <span class="count" id="remainingCount"></span>
+    </div>
+    <div id="planned"></div>
+    <button class="add" id="addBtn">＋ Add Place</button>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>✅ What I Did Visit</h2>
+      <span class="count" id="visitedCount"></span>
+    </div>
+    <div id="visited"></div>
+  </section>
+
+  <div class="footer">Your checklist is saved in this browser.</div>
+</main>
+
+<dialog id="dialog">
+  <form method="dialog" class="modal" id="addForm">
+    <h3>＋ Add a place</h3>
+    <label for="placeName">Place name</label>
+    <input id="placeName" name="placeName" placeholder="e.g. Kawah Putih" required maxlength="100">
+    <label for="placeNote">Note <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <input id="placeNote" name="placeNote" placeholder="e.g. Go in the morning" maxlength="140">
+    <div class="small-note">Google Maps will be generated automatically using the place name and Bandung as the search location.</div>
+    <div class="modal-actions">
+      <button type="button" id="cancelBtn">Cancel</button>
+      <button type="submit" class="primary">Add Place</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const STORAGE_KEY = "bandung-escape-2026-v1";
+const initialPlaces = [
+      {id: crypto.randomUUID(), name: 'Toko Tahu Priangan', maps: 'https://www.google.com/maps/search/?api=1&query=Toko%20Tahu%20Priangan%2C%20Bandung&query_place_id=ChIJHXkmw27naC4R68gPLHp9nNs', visited: false},
+      {id: crypto.randomUUID(), name: 'Dimsum Sembilan Ayam', maps: 'https://www.google.com/maps/search/?api=1&query=Dimsum%20Sembilan%20Ayam%2C%20Bandung&query_place_id=ChIJoe304mnmaC4Rg1_Lv2k3PdM', visited: false},
+      {id: crypto.randomUUID(), name: 'Rochi Bandung', maps: 'https://www.google.com/maps/search/?api=1&query=Rochi%20Bandung%2C%20Bandung&query_place_id=ChIJtx0GFgDnaC4RVnYZ_n0LSc8', visited: false},
+      {id: crypto.randomUUID(), name: 'Museum Geologi', maps: 'https://www.google.com/maps/search/?api=1&query=Museum%20Geologi%2C%20Bandung&query_place_id=ChIJveuvykzmaC4R9jRz_5tzU54', visited: false},
+      {id: crypto.randomUUID(), name: 'Jalan Braga', maps: 'https://www.google.com/maps/search/?api=1&query=Jalan%20Braga%2C%20Bandung&query_place_id=ChIJf5WxagDnaC4Rp1ylf9kTKEA', visited: false},
+      {id: crypto.randomUUID(), name: 'The Room 19 Library', maps: 'https://www.google.com/maps/search/?api=1&query=The%20Room%2019%20Library%2C%20Bandung', visited: false},
+      {id: crypto.randomUUID(), name: 'Taman Hutan Raya Ir. H. Djuanda', maps: 'https://www.google.com/maps/search/?api=1&query=Taman%20Hutan%20Raya%20Ir.%20H.%20Djuanda%2C%20Bandung&query_place_id=ChIJhz3JLbjgaC4RsVhSF1nAZPY', visited: false},
+      {id: crypto.randomUUID(), name: 'Kusuma Matcha', maps: 'https://www.google.com/maps/search/?api=1&query=Kusuma%20Matcha%2C%20Bandung&query_place_id=ChIJbQuYJErnaC4R4a_nTjagwXg', visited: false}
+];
+
+let places = load();
+
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (Array.isArray(saved)) return saved;
+  } catch(e) {}
+  return initialPlaces;
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(places));
+}
+
+function mapsUrl(name) {
+  return "https://www.google.com/maps/search/?api=1&query=" +
+         encodeURIComponent(name + ", Bandung");
+}
+
+function render() {
+  const planned = document.getElementById("planned");
+  const visited = document.getElementById("visited");
+  planned.innerHTML = "";
+  visited.innerHTML = "";
+
+  const pending = places.filter(p => !p.visited);
+  const done = places.filter(p => p.visited);
+
+  pending.forEach(p => planned.appendChild(card(p)));
+  done.forEach(p => visited.appendChild(card(p, true)));
+
+  if (!pending.length) planned.innerHTML = '<div class="empty">🎉 You visited every place on your list!</div>';
+  if (!done.length) visited.innerHTML = '<div class="empty">Nothing yet — go explore Bandung! 🌿</div>';
+
+  document.getElementById("remainingCount").textContent = pending.length + " remaining";
+  document.getElementById("visitedCount").textContent = done.length + " visited";
+
+  const total = places.length;
+  const pct = total ? Math.round(done.length / total * 100) : 0;
+  document.getElementById("progressText").textContent = done.length + " / " + total + " visited";
+  document.getElementById("progressPct").textContent = pct + "%";
+  document.getElementById("progressBar").style.width = pct + "%";
+}
+
+function card(p, isVisited=false) {
+  const el = document.createElement("div");
+  el.className = "card" + (isVisited ? " visited" : "");
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.className = "check";
+  checkbox.checked = p.visited;
+  checkbox.setAttribute("aria-label", "Mark " + p.name + " as visited");
+  checkbox.addEventListener("change", () => {
+    p.visited = checkbox.checked;
+    save();
+    render();
+  });
+
+  const body = document.createElement("div");
+  body.className = "place";
+
+  const name = document.createElement("div");
+  name.className = "name";
+  name.textContent = p.name;
+  body.appendChild(name);
+
+  if (p.note) {
+    const note = document.createElement("div");
+    note.className = "small-note";
+    note.textContent = p.note;
+    body.appendChild(note);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "actions";
+
+  const link = document.createElement("a");
+  link.className = "maps";
+  link.href = p.maps || mapsUrl(p.name);
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = "📍 Open in Google Maps ↗";
+  actions.appendChild(link);
+
+  const del = document.createElement("button");
+  del.className = "delete";
+  del.type = "button";
+  del.textContent = "Remove";
+  del.addEventListener("click", () => {
+    if (confirm('Remove "' + p.name + '" from your trip?')) {
+      places = places.filter(x => x.id !== p.id);
+      save();
+      render();
+    }
+  });
+  actions.appendChild(del);
+
+  body.appendChild(actions);
+  el.appendChild(checkbox);
+  el.appendChild(body);
+  return el;
+}
+
+document.getElementById("addBtn").addEventListener("click", () => {
+  document.getElementById("placeName").value = "";
+  document.getElementById("placeNote").value = "";
+  document.getElementById("dialog").showModal();
+  setTimeout(() => document.getElementById("placeName").focus(), 50);
+});
+
+document.getElementById("cancelBtn").addEventListener("click", () => {
+  document.getElementById("dialog").close();
+});
+
+document.getElementById("addForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = document.getElementById("placeName").value.trim();
+  const note = document.getElementById("placeNote").value.trim();
+  if (!name) return;
+  places.push({
+    id: crypto.randomUUID(),
+    name,
+    note,
+    maps: mapsUrl(name),
+    visited: false
+  });
+  save();
+  render();
+  document.getElementById("dialog").close();
+});
+
+render();
+</script>
+</body>
+</html>
